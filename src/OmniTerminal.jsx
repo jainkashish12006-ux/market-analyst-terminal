@@ -55,7 +55,7 @@ import { DocsPage } from "./DocsPage";
 import { SettingsPage } from "./SettingsPage";
 import { HelpPage } from "./HelpPage";
 import { PreferencesPage } from "./PreferencesPage";
-import { Footer } from "./footer";
+import { Footer } from "./Footer";
 import { EKGLine } from "./MicroComponents";
 import {LandingPage}  from "./LandingPage";
 import {
