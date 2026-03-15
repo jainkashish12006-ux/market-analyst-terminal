@@ -19,7 +19,7 @@ export function AnimatedPrice({ value, decimals = 2, size = 13, bold }) {
   </span>;
 }
 
-export function Sparkline({ data, color, width = 64, height = 22, area, smooth }) {
+export function Sparkline({ data, color, width = 600, height = 200, area = true, smooth = true }) {
   if (!data || data.length < 2) return <span style={{ display: "inline-block", width, height }} />;
   const min = Math.min(...data), max = Math.max(...data), rng = max - min || 1;
   const pts = data.map((v, i) => ({ x: (i / (data.length - 1)) * width, y: height - ((v - min) / rng) * (height - 3) - 1 }));
@@ -35,8 +35,8 @@ export function Sparkline({ data, color, width = 64, height = 22, area, smooth }
     return (
       <svg width={width} height={height} style={{ display: "inline-block", verticalAlign: "middle", overflow: "visible" }}>
         <defs><linearGradient id={id_} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.45" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient></defs>
         {area && <path d={aPath} fill={`url(#${id_})`} />}
         <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
@@ -48,11 +48,12 @@ export function Sparkline({ data, color, width = 64, height = 22, area, smooth }
   return (
     <svg width={width} height={height} style={{ display: "inline-block", verticalAlign: "middle", overflow: "visible" }}>
       <defs><linearGradient id={id_} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+        <stop offset="0%" stopColor={color} stopOpacity="0.5" />
         <stop offset="100%" stopColor={color} stopOpacity="0" />
       </linearGradient></defs>
       {area && <polygon points={ap} fill={`url(#${id_})`} />}
-      <polyline points={pp} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pp} fill="none" stroke={color} strokeWidth="2.5"
+filter={`drop-shadow(0px 0px 6px ${color})`} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }

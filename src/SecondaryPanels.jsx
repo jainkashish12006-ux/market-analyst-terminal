@@ -287,6 +287,11 @@ export function SystemHealthPanel({ health, connected, symbolMap }) {
   );
 }
 
-export default function SecondaryPanels() {
-  return <div>Secondary Panels</div>;
+export default function SecondaryPanels({ anomalies, connected, health, symbolMap, onSymbolSelect, focusMode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: "4px 0" }}>
+      <SystemHealthPanel health={health || {}} connected={connected} symbolMap={symbolMap || {}} />
+      <AnomalyTrackerPanel anomalies={anomalies || []} onSymbolSelect={onSymbolSelect} focusMode={focusMode} />
+    </div>
+  );
 }

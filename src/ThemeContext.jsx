@@ -2,129 +2,135 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 
 export const THEMES = {
   deepSea: {
-    name: "deepSea",
+    name: "deepSea", // "Midnight Aurora" concept
     label: "Dark",
 
     // ── Backgrounds ──────────────────────────────────────────────────────
-    bg: "#020617",              // Deepest midnight blue
-    bgCard: "#0F172A",          // Slate blue for cards
-    bgSidebar: "#020617",       // Matching background
-    bgSurface: "#0A0F1F",       // Panel surfaces
-    bgInput: "rgba(255,255,255,0.04)",
+    bg: "#04050E",              // Deepest violet-infused black
+    bgCard: "#0B0F19",          // Rich dark card
+    bgSidebar: "#070A13",       // Deep sidebar
+    bgSurface: "#0E1424",       // Panel surfaces with slight lift
+    bgInput: "rgba(255, 255, 255, 0.03)",
 
     // ── Premium Glassmorphism ────────────────────────────────────────────
-    glass: "rgba(255, 255, 255, 0.65)",    // Opaque glass
-    glassBorder: "rgba(255, 255, 255, 0.5)",
-    glassBlur: "blur(28px)",
-    glassStrong: "rgba(255, 255, 255, 0.85)",
-    glassMid: "rgba(255, 255, 255, 0.75)",
+    glass: "rgba(11, 15, 25, 0.65)",    
+    glassBorder: "rgba(255, 255, 255, 0.08)", // Softer edge
+    glassBlur: "blur(32px)",            // Deep blur for premium feel
+    glassStrong: "rgba(11, 15, 25, 0.85)",
+    glassMid: "rgba(11, 15, 25, 0.75)",
 
     // ── Typography ────────────────────────────────────────────────────────
-    text: "#EDEDED",            // High contrast white
-    textSub: "#A1A1AA",         // Muted gray
-    textDim: "#71717A",         // Dimmer gray
-    textMuted: "#52525B",
+    text: "#F8FAFC",            // Brilliant white
+    textSub: "#94A3B8",         // Cool, legible gray
+    textDim: "#64748B",         // Deeper gray
+    textMuted: "#475569",
 
     // ── Borders ──────────────────────────────────────────────────────────
-    border: "rgba(255,255,255,0.1)", // Crisp subtle line
-    borderAccent: "rgba(255,255,255,0.2)",
-    borderHover: "rgba(255,255,255,0.15)",
+    border: "rgba(255, 255, 255, 0.06)", // Extremely subtle structure lines
+    borderAccent: "rgba(0, 240, 255, 0.3)", // Cyber cyan accent line
+    borderHover: "rgba(255, 255, 255, 0.12)",
 
     // ── Accent palette ───────────────────────────────────────────────────
-    accent: "#3B82F6",          // Vibrant blue
-    accentDim: "rgba(59, 130, 246, 0.1)",
-    accentGlow: "transparent",
-    accentGlowStrong: "transparent",
-    green: "#10B981",           // Emerald green (Tailwind style)
-    greenGlow: "transparent",
-    amber: "#F59E0B",           // Amber
-    amberGlow: "transparent",
-    red: "#EF4444",             // Red
-    redGlow: "transparent",
+    accent: "#00F0FF",          // Neon Cyan
+    accentDim: "rgba(0, 240, 255, 0.12)",
+    accentGlow: "0 0 12px rgba(0, 240, 255, 0.4)",
+    accentGlowStrong: "0 0 24px rgba(0, 240, 255, 0.6)",
+    
+    green: "#10B981",           // Vibrant Emerald
+    greenGlow: "0 0 12px rgba(16, 185, 129, 0.4)",
+    
+    amber: "#F59E0B",           // Bright Amber
+    amberGlow: "0 0 12px rgba(245, 158, 11, 0.4)",
+    
+    red: "#F43F5E",             // Vibrant Rose/Red
+    redGlow: "0 0 12px rgba(244, 63, 94, 0.4)",
 
     // ── Fonts ─────────────────────────────────────────────────────────────
-    fontMono: "'IBM Plex Mono', 'JetBrains Mono', monospace",
+    fontMono: "'JetBrains Mono', 'IBM Plex Mono', monospace",
     fontUI: "'Inter', sans-serif",
-    fontDisplay: "'Inter', sans-serif",
+    fontDisplay: "'Outfit', 'Inter', sans-serif",
     fontSerif: "'Playfair Display', serif",
 
     // ── Shadows ──────────────────────────────────────────────────────────
-    shadow: "0 1px 3px rgba(0,0,0,0.4)",
-    shadowCard: "none",
-    shadowGlow: "none",
-    shadowFloat: "0 4px 12px rgba(0,0,0,0.6)",
+    shadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
+    shadowCard: "0 8px 32px rgba(0, 0, 0, 0.5)",
+    shadowGlow: "0 0 40px rgba(0, 240, 255, 0.15)", // Ambient glow
+    shadowFloat: "0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.05)",
 
     // ── Nav ───────────────────────────────────────────────────────────────
-    navBg: "#020617",
-    tickerBg: "#020617",
+    navBg: "rgba(4, 5, 14, 0.8)",
+    tickerBg: "#04050E",
 
     // ── Misc ─────────────────────────────────────────────────────────────
-    cardRadius: 8,              // Sleeker edges
-    surface: "#1E293B",
-    bgSecondary: "#0F172A",
+    cardRadius: 12,             // Modern rounded corners
+    surface: "#111827",
+    bgSecondary: "#0B0F19",
   },
 
   calm: {
-    name: "calm",
+    name: "calm", // "Pearl" concept
     label: "Light",
 
     // ── Backgrounds ──────────────────────────────────────────────────────
-    bg: "#FAFAFA",
+    bg: "#F4F6F8",              // Cool, crisp gray
     bgCard: "#FFFFFF",
-    bgSidebar: "#F4F4F5",
+    bgSidebar: "#F8FAFC",
     bgSurface: "#FFFFFF",
-    bgInput: "rgba(0,0,0,0.04)",
+    bgInput: "rgba(0, 0, 0, 0.03)",
 
     // ── Solid Colors (Replacing Glassmorphism) ────────────────────────────
-    glass: "#FFFFFF",
-    glassBorder: "rgba(0,0,0,0.08)",
-    glassBlur: "none",
-    glassStrong: "#FFFFFF",
-    glassMid: "#FAFAFA",
+    glass: "rgba(255, 255, 255, 0.8)",
+    glassBorder: "rgba(0, 0, 0, 0.06)",
+    glassBlur: "blur(24px)",
+    glassStrong: "rgba(255, 255, 255, 0.95)",
+    glassMid: "rgba(255, 255, 255, 0.85)",
 
     // ── Typography ────────────────────────────────────────────────────────
-    text: "#09090B",
-    textSub: "#71717A",
-    textDim: "#A1A1AA",
-    textMuted: "#D4D4D8",
+    text: "#0F172A",
+    textSub: "#475569",
+    textDim: "#94A3B8",
+    textMuted: "#CBD5E1",
 
     // ── Borders ──────────────────────────────────────────────────────────
-    border: "rgba(0,0,0,0.08)",
-    borderAccent: "rgba(0,0,0,0.15)",
-    borderHover: "rgba(0,0,0,0.12)",
+    border: "rgba(0, 0, 0, 0.06)", // Soft dividing lines
+    borderAccent: "rgba(37, 99, 235, 0.2)",
+    borderHover: "rgba(0, 0, 0, 0.12)",
 
     // ── Accent palette ───────────────────────────────────────────────────
-    accent: "#2563EB",          // Deep blue for light theme
+    accent: "#2563EB",          // Royal blue
     accentDim: "rgba(37, 99, 235, 0.08)",
-    accentGlow: "transparent",
-    accentGlowStrong: "transparent",
-    green: "#10B981",
-    greenGlow: "transparent",
-    amber: "#F59E0B",
-    amberGlow: "transparent",
-    red: "#EF4444",
-    redGlow: "transparent",
+    accentGlow: "0 4px 14px rgba(37, 99, 235, 0.3)",
+    accentGlowStrong: "0 8px 24px rgba(37, 99, 235, 0.4)",
+    
+    green: "#059669",           // Deeper emerald for readability
+    greenGlow: "0 4px 12px rgba(5, 150, 105, 0.2)",
+    
+    amber: "#D97706",
+    amberGlow: "0 4px 12px rgba(217, 119, 6, 0.2)",
+    
+    red: "#E11D48",             // Rose
+    redGlow: "0 4px 12px rgba(225, 29, 72, 0.2)",
 
     // ── Fonts ─────────────────────────────────────────────────────────────
-    fontMono: "'IBM Plex Mono', 'JetBrains Mono', monospace",
+    fontMono: "'JetBrains Mono', 'IBM Plex Mono', monospace",
     fontUI: "'Inter', sans-serif",
-    fontDisplay: "'Inter', sans-serif",
+    fontDisplay: "'Outfit', 'Inter', sans-serif",
     fontSerif: "'Playfair Display', serif",
 
     // ── Shadows ──────────────────────────────────────────────────────────
-    shadow: "0 1px 2px rgba(0,0,0,0.05)",
-    shadowCard: "none",
-    shadowGlow: "none",
-    shadowFloat: "0 4px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
+    shadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
+    shadowCard: "0 8px 24px rgba(15, 23, 42, 0.06)",
+    shadowGlow: "0 8px 32px rgba(37, 99, 235, 0.1)",
+    shadowFloat: "0 16px 48px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(0,0,0,0.02)",
 
     // ── Nav ───────────────────────────────────────────────────────────────
-    navBg: "#F4F4F5",
-    tickerBg: "#FAFAFA",
+    navBg: "rgba(248, 250, 252, 0.9)",
+    tickerBg: "#F4F6F8",
 
     // ── Misc ─────────────────────────────────────────────────────────────
-    cardRadius: 6,
+    cardRadius: 10,
     surface: "#FFFFFF",
-    bgSecondary: "#F4F4F5",
+    bgSecondary: "#F8FAFC",
   },
 };
 
