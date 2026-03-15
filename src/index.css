@@ -1,0 +1,21 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+ 
+html {
+  scroll-behavior: smooth;
+  /* No overflow:hidden here — landing page needs to scroll */
+}
+ 
+body {
+  margin: 0;
+  padding: 0;
+  /* No overflow:hidden here — landing page needs to scroll */
+}
+ 
+#root {
+  /* No height:100% or overflow:hidden here — the app controls this per-view */
+  min-height: 100vh;
+}
