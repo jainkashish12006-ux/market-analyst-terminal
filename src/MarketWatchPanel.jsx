@@ -13,9 +13,9 @@ const CROSS_ASSET_RIPPLE = {
   GOLD:  ["XOM","JPM"],
 };
 
-function computeRipples(symbolMap) {
+function computeRipples(symMap) {
   const rippled = new Set();
-  Object.entries(symbolMap).forEach(([sym, data]) => {
+  Object.entries(symMap).forEach(([sym, data]) => {
     if (data.stdDev > 2 && CROSS_ASSET_RIPPLE[sym]) {
       CROSS_ASSET_RIPPLE[sym].forEach(r => rippled.add(r));
     }
@@ -31,43 +31,46 @@ function WatchlistCard({ symbol, data, onSelect, ripple, batchMode }) {
 
   return (
     <RippleCard ripple={ripple} theme={theme} style={{
-      borderRadius: 12, padding: "13px 14px", cursor: "pointer",
-      background: theme.bgCard, transition: "transform 0.2s, box-shadow 0.2s",
+      borderRadius: 12, padding: "14px", cursor: "pointer",
+      background: theme.bgCard, border: `1px solid ${theme.border}`,
+      boxShadow: `0 4px 12px rgba(0,0,0,0.1)`,
+      transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
       position: "relative", overflow: "hidden",
     }}>
       <motion.div
-        whileHover={{ y: -1 }}
+        whileHover={{ y: -4, scale: 1.02, boxShadow: `0 12px 24px rgba(0,0,0,0.2)` }}
         onClick={() => onSelect(symbol)}
-        style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {data.pulsing && (
-          <div style={{
-            position: "absolute", top: 7, right: 7, width: 6, height: 6,
-            borderRadius: "50%", background: theme.warn,
-            animation: "dot-pulse 1.4s ease-in-out infinite",
-            boxShadow: `0 0 8px ${theme.warn}`,
-          }} />
+          <motion.div 
+            animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            style={{
+              position: "absolute", top: 10, right: 10, width: 8, height: 8,
+              borderRadius: "50%", background: theme.warn,
+              boxShadow: `0 0 10px ${theme.warn}`,
+            }} />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: theme.fontData, fontSize: 11, fontWeight: 700,
-            color: theme.textMuted, letterSpacing: "0.07em" }}>{symbol}</span>
-          <span style={{ fontSize: 9, color: theme.textDim, fontFamily: theme.fontUI }}>{data.sector}</span>
+          <span style={{ fontFamily: theme.fontData, fontSize: 12, fontWeight: 800,
+            color: theme.text, letterSpacing: "0.08em" }}>{symbol}</span>
+          <span style={{ fontSize: 9, color: theme.textDim, fontFamily: theme.fontUI, textTransform: "uppercase" }}>{data.sector}</span>
         </div>
-        <AnimatedPrice value={data.price} decimals={2} size={15} bold />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: theme.fontData, fontSize: 11, color,
-            display: "flex", alignItems: "center", gap: 3 }}>
-            {isUp ? <TrendingUp size={9}/> : <TrendingDown size={9}/>}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+          <AnimatedPrice value={data.price} decimals={2} size={18} bold />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+          <span style={{ fontFamily: theme.fontData, fontSize: 11, color, fontWeight: 700,
+            display: "flex", alignItems: "center", gap: 3, background: `${color}15`, padding: "2px 6px", borderRadius: 4 }}>
+            {isUp ? <TrendingUp size={10}/> : <TrendingDown size={10}/>}
             {(data.change * 100).toFixed(2)}%
           </span>
           <Sparkline
             data={data.history}
             color={color}
-            width={56} height={18}
+            width={60} height={22}
             area smooth={isCalm}
           />
-        </div>
-        <div style={{ fontSize: 9, color: theme.textDim, fontFamily: theme.fontData }}>
-          {(data.volume / 1000).toFixed(0)}K vol
         </div>
       </motion.div>
     </RippleCard>
@@ -82,92 +85,52 @@ function SignalRow({ signal, onSelect, index }) {
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.15, delay: index < 6 ? index * 0.025 : 0 }}
+      transition={{ duration: 0.2, delay: index < 6 ? index * 0.03 : 0 }}
       onClick={() => onSelect(signal.symbol)}
       style={{
-        display: "grid", gridTemplateColumns: "72px 1fr 100px 80px 80px",
-        padding: "7px 14px", borderBottom: `1px solid ${theme.border}`,
-        alignItems: "center", gap: 8, cursor: "pointer", transition: "background 0.15s",
+        display: "grid", gridTemplateColumns: "80px 1.5fr 1fr 1fr 1fr",
+        padding: "12px 16px", borderBottom: `1px solid ${theme.border}`,
+        alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.15s",
       }}
-      whileHover={{ background: theme.bgGlass }}
+      whileHover={{ background: `${theme.accent}08`, x: 4 }}
     >
-      <span style={{ fontFamily: theme.fontData, fontSize: 11, color: theme.textMuted,
-        letterSpacing: "0.06em", fontWeight: 700 }}>{signal.symbol}</span>
+      <span style={{ fontFamily: theme.fontData, fontSize: 12, color: theme.text,
+        letterSpacing: "0.06em", fontWeight: 800 }}>{signal.symbol}</span>
       <span style={{ fontSize: 11, color: theme.textDim, fontFamily: theme.fontUI,
         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{signal.sector}</span>
-      <AnimatedPrice value={signal.price} decimals={2} />
+      <div style={{ padding: "4px 8px", background: theme.bgSurface, borderRadius: 6, width: "fit-content" }}>
+        <AnimatedPrice value={signal.price} decimals={2} size={12} bold />
+      </div>
       <span style={{ fontFamily: theme.fontData, fontSize: 11,
         color: isUp ? theme.accentSecondary : theme.warn,
-        display: "flex", alignItems: "center", gap: 2 }}>
-        {isUp ? <TrendingUp size={9}/> : <TrendingDown size={9}/>}
+        fontWeight: 700,
+        display: "flex", alignItems: "center", gap: 4 }}>
+        {isUp ? <TrendingUp size={11}/> : <TrendingDown size={11}/>}
         {(signal.change * 100).toFixed(3)}%
       </span>
-      <span style={{ fontFamily: theme.fontData, fontSize: 10, color: theme.textDim }}>
-        {(signal.volume / 1000).toFixed(0)}K
+      <span style={{ fontFamily: theme.fontData, fontSize: 11, color: theme.textDim, fontWeight: 600 }}>
+        {Math.floor(signal.volume / 1000)}K
       </span>
     </motion.div>
   );
 }
 
-export function MarketWatchPanel({ signals, symbolMap, batchMode, onSymbolSelect, focusMode }) {
+export function MarketWatchPanel({ signals, symMap, batchMode, onSymbolSelect, focusMode }) {
   const { theme } = useTheme();
-  const rippled = useMemo(() => computeRipples(symbolMap), [symbolMap]);
+  const rippled = useMemo(() => computeRipples(symMap), [symMap]);
 
-  const sortedSymbols = Object.entries(symbolMap)
+  const sortedSymbols = Object.entries(symMap)
     .sort((a, b) => Math.abs(b[1].change) - Math.abs(a[1].change));
 
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: focusMode ? "1fr" : "1fr 320px",
-      gap: 14, height: "100%",
+      gridTemplateColumns: focusMode ? "1fr" : "minmax(0, 1fr) 340px",
+      gap: 16, height: "100%",
     }}>
       {/* Main watchlist grid */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
-        {/* Symbol grid */}
-        {!focusMode && (
-          <div style={{
-            background: theme.glass, backdropFilter: theme.glassBlur,
-            borderRadius: 14, overflow: "hidden",
-            border: `1px solid ${theme.border}`,
-            boxShadow: theme.shadow,
-          }}>
-            <div style={{
-              padding: "11px 14px", borderBottom: `1px solid ${theme.border}`,
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: theme.bgGlass,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <Zap size={13} color={theme.accent} />
-                <span style={{ fontFamily: theme.fontUI, fontSize: 11, fontWeight: 700,
-                  color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  Live Watchlist
-                </span>
-              </div>
-              <span style={{ fontFamily: theme.fontData, fontSize: 10, color: theme.textDim }}>
-                Click any ticker to deep dive
-              </span>
-            </div>
-            <div style={{
-              padding: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: 9,
-            }}>
-              {sortedSymbols.map(([sym, data]) => (
-                <WatchlistCard
-                  key={sym}
-                  symbol={sym}
-                  data={data}
-                  onSelect={onSymbolSelect}
-                  ripple={rippled.has(sym)}
-                  batchMode={batchMode}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
+  
         {/* Signal feed */}
         <div style={{
           background: theme.glass, backdropFilter: theme.glassBlur,
@@ -193,11 +156,11 @@ export function MarketWatchPanel({ signals, symbolMap, batchMode, onSymbolSelect
             </span>
           </div>
           {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "72px 1fr 100px 80px 80px",
-            padding: "5px 14px", borderBottom: `1px solid ${theme.border}`, gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "80px 1.5fr 1fr 1fr 1fr",
+            padding: "8px 16px", borderBottom: `1px solid ${theme.border}`, gap: 12 }}>
             {["SYMBOL","SECTOR","PRICE","CHANGE","VOL"].map(h => (
               <span key={h} style={{ fontSize: 9, color: theme.textDim, fontFamily: theme.fontData,
-                textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</span>
+                textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>{h}</span>
             ))}
           </div>
           <div style={{ overflowY: "auto", maxHeight: focusMode ? "60vh" : 320 }}>
@@ -228,9 +191,9 @@ export function MarketWatchPanel({ signals, symbolMap, batchMode, onSymbolSelect
                 Sector Heatmap
               </span>
             </div>
-            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 7 }}>
-              {["Tech","Finance","Energy","Crypto","FX","Consumer"].map(sector => {
-                const items = Object.values(symbolMap).filter(d => d.sector === sector);
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 9 }}>
+              {["Tech","Finance","Energy","Crypto","FX","Consumer","Auto","Commodities"].map(sector => {
+                const items = Object.values(symMap).filter(d => d.sector === sector);
                 const avg = items.length
                   ? items.reduce((a, d) => a + d.change, 0) / items.length
                   : 0;
@@ -242,13 +205,17 @@ export function MarketWatchPanel({ signals, symbolMap, batchMode, onSymbolSelect
                       flexShrink: 0 }}>{sector}</span>
                     <div style={{ flex: 1, height: 20, background: theme.bgSurface, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                       <motion.div
-                        animate={{ width: `${50 + avg * 2000}%` }}
-                        transition={{ duration: 0.4 }}
+                        animate={{ width: `${Math.max(5, Math.min(95, 50 + avg * 1000))}%` }}
+                        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
                         style={{
-                          height: "100%", background: `${color}${Math.floor(intensity * 80 + 20).toString(16).padStart(2,"0")}`,
-                          borderRadius: 4, minWidth: "2%", maxWidth: "98%",
+                          height: "100%", background: `${color}40`,
+                          borderRight: `2px solid ${color}`,
+                          borderRadius: 4,
                         }}
                       />
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: theme.textSub, opacity: 0.5, pointerEvents: "none", fontWeight: 700 }}>
+                        {avg >= 0.001 ? "BULLISH" : avg <= -0.001 ? "BEARISH" : "NEUTRAL"}
+                      </div>
                     </div>
                     <span style={{ fontFamily: theme.fontData, fontSize: 10, color, width: 52, textAlign: "right" }}>
                       {(avg * 100).toFixed(2)}%

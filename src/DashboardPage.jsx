@@ -1,112 +1,133 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+  TrendingUp, TrendingDown, Clock, Maximize2, 
+  Terminal, Zap, Target, Activity, ChevronRight, 
+  Info, Bell, AlertCircle, ShieldAlert
+} from "lucide-react";
 import { useTheme } from "./ThemeContext";
-import { AnimatedPrice, Sparkline, EKGLine } from "./MicroComponents";
+import { Sparkline, AnimatedPrice } from "./MicroComponents";
 import { WorldMap } from "./WorldMap";
-import { COMPANIES, SECTORS } from "./useDataStream";
+import { COMPANIES } from "./useDataStream";
 
 // ─── LUMINOUS PRICE CHART (Canvas) ───────────────────────────────────────────
-function PriceChart({ data, color, height = 200 }) {
-  const { theme: t } = useTheme();
+function PriceChart({ data, color, height, mode = "Price" }) {
   const ref = useRef(null);
-  const isDeep = t.name === "deepSea";
+  const { theme: t, mode: globalMode } = useTheme();
+  const [hoverData, setHoverData] = useState(null);
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || !data || data.length < 2) return;
-    const dpr = devicePixelRatio || 1;
-    const W = canvas.offsetWidth;
-    const H = height;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, W, H);
+    
+    ctx.clearRect(0, 0, rect.width, height);
 
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const rng = max - min || 1;
-    const pad = { top: 12, bottom: 20, left: 8, right: 8 };
-    const cW = W - pad.left - pad.right;
-    const cH = H - pad.top - pad.bottom;
+    if (!data || data.length === 0) return;
 
-    const px = (i) => pad.left + (i / (data.length - 1)) * cW;
-    const py = (v) => pad.top + cH - ((v - min) / rng) * cH;
+    const minVal = Math.min(...data);
+    const maxVal = Math.max(...data);
+    const avgVal = data.reduce((a,b)=>a+b,0)/data.length;
+    
+    // Improved normalization to show changes more clearly
+    // If the range is extremely small compared to the value, we zoom in on the variance
+    const variance = maxVal - minVal;
+    const padding = variance > 0 ? variance * 0.1 : avgVal * 0.01;
+    const minD = minVal - padding;
+    const maxD = maxVal + padding;
+    const range = maxD - minD || 1;
 
-    // ── Subtle grid ───────────────────────────────────────────────────────
-    ctx.strokeStyle = t.border;
-    ctx.lineWidth = 0.5;
-    [0.25, 0.5, 0.75].forEach(frac => {
-      const y = pad.top + cH * (1 - frac);
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-      const val = min + rng * frac;
-      ctx.fillStyle = t.textDim;
-      ctx.font = `${8 * dpr / dpr}px IBM Plex Mono, JetBrains Mono, monospace`;
-      ctx.fillText(val > 100 ? val.toFixed(0) : val.toFixed(2), pad.left + 2, y - 3);
-    });
+    const px = (i) => (i / Math.max(1, data.length - 1)) * rect.width;
+    const py = (val) => height - ((val - minD) / range) * (height - 40) - 20;
 
-    // ── Gradient area fill ───────────────────────────────────────────────
-    const areaGrad = ctx.createLinearGradient(0, pad.top, 0, H);
-    if (isDeep) {
-      areaGrad.addColorStop(0, color + "33");   // 20% opacity
-      areaGrad.addColorStop(0.6, color + "0d");
-      areaGrad.addColorStop(1, color + "00");
+    if (mode === "Volume") {
+      const barW = Math.max(2, (rect.width / data.length) - 1);
+      data.forEach((val, i) => {
+        const h = ((val - minD) / range) * (height - 40);
+        ctx.fillStyle = color + "40";
+        ctx.fillRect(px(i) - barW / 2, height - h, barW, h);
+      });
     } else {
-      areaGrad.addColorStop(0, color + "22");
-      areaGrad.addColorStop(1, color + "00");
-    }
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, color + "33");
+      grad.addColorStop(1, "transparent");
 
-    // Build smooth bezier path
-    ctx.beginPath();
-    ctx.moveTo(px(0), H);
-    ctx.lineTo(px(0), py(data[0]));
-    for (let i = 1; i < data.length; i++) {
-      const cpx = (px(i - 1) + px(i)) / 2;
-      ctx.bezierCurveTo(cpx, py(data[i - 1]), cpx, py(data[i]), px(i), py(data[i]));
-    }
-    ctx.lineTo(px(data.length - 1), H);
-    ctx.closePath();
-    ctx.fillStyle = areaGrad;
-    ctx.fill();
-
-    // ── Luminous line ─────────────────────────────────────────────────────
-    ctx.beginPath();
-    ctx.moveTo(px(0), py(data[0]));
-    for (let i = 1; i < data.length; i++) {
-      const cpx = (px(i - 1) + px(i)) / 2;
-      ctx.bezierCurveTo(cpx, py(data[i - 1]), cpx, py(data[i]), px(i), py(data[i]));
-    }
-    ctx.strokeStyle = color;
-    ctx.lineWidth = isDeep ? 1.8 : 1.5;
-    ctx.lineJoin = "round";
-    if (isDeep) {
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = color;
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // ── End dot with glow ─────────────────────────────────────────────────
-    const lx = px(data.length - 1), ly = py(data[data.length - 1]);
-    if (isDeep) {
       ctx.beginPath();
-      ctx.arc(lx, ly, 6, 0, Math.PI * 2);
-      ctx.fillStyle = color + "30";
+      ctx.moveTo(px(0), py(data[0]));
+      data.forEach((val, i) => ctx.lineTo(px(i), py(val)));
+      ctx.lineTo(px(data.length - 1), height);
+      ctx.lineTo(px(0), height);
+      ctx.fillStyle = grad;
       ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(px(0), py(data[0]));
+      data.forEach((val, i) => ctx.lineTo(px(i), py(val)));
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      
+      if (globalMode === "deepSea") {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = color;
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
-    ctx.beginPath();
-    ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    if (isDeep) { ctx.shadowBlur = 14; ctx.shadowColor = color; }
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }, [data, color, t, height]);
+  }, [data, color, t, height, mode, globalMode]);
+
+  const handleMouseMove = (e) => {
+    if (!data || data.length === 0) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const idx = Math.round((x / rect.width) * (data.length - 1));
+    if (idx >= 0 && idx < data.length) {
+      setHoverData({ value: data[idx], x });
+    }
+  };
 
   return (
-    <canvas
-      ref={ref}
-      style={{ width: "100%", height, display: "block" }}
-    />
+    <div style={{ position: "relative" }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverData(null)}>
+      <canvas ref={ref} style={{ width: "100%", height, display: "block" }} />
+      <AnimatePresence>
+        {hoverData && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "absolute",
+              left: hoverData.x,
+              top: 10,
+              transform: "translateX(-50%)",
+              background: t.glass,
+              backdropFilter: "blur(8px)",
+              border: `1px solid ${color}`,
+              padding: "4px 10px",
+              borderRadius: 6,
+              pointerEvents: "none",
+              zIndex: 10,
+              boxShadow: `0 4px 15px ${color}30`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center"
+            }}
+          >
+            <span style={{ fontSize: 9, color: t.textDim, fontFamily: t.fontUI, textTransform: "uppercase" }}>{mode}</span>
+            <span style={{ fontSize: 13, color: t.text, fontFamily: t.fontData, fontWeight: 700 }}>
+              {hoverData.value.toFixed(2)}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -121,22 +142,23 @@ function StatRow({ label, value, delta }) {
       onHoverStart={() => setHov(true)}
       onHoverEnd={() => setHov(false)}
       style={{
-        flex: 1, padding: "12px 16px",
+        flex: 1, padding: "16px 20px",
         borderRight: `1px solid ${t.border}`,
         cursor: "default",
-        transition: "background 0.2s",
+        transition: "background 0.3s ease, transform 0.2s ease",
         background: hov
-          ? (t.name === "deepSea" ? `rgba(0,229,255,0.04)` : `rgba(79,121,66,0.04)`)
+          ? (t.name === "deepSea" ? `rgba(0, 240, 255, 0.04)` : `rgba(37, 99, 235, 0.04)`)
           : "transparent",
         position: "relative", overflow: "hidden",
       }}>
       {/* Hover micro-glow */}
-      {hov && t.name === "deepSea" && (
+      {hov && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: 1,
-            background: `linear-gradient(90deg, transparent, ${t.accent}60, transparent)`,
+            position: "absolute", bottom: 0, left: 0, right: 0, height: 2,
+            background: `linear-gradient(90deg, transparent, ${t.accent}80, transparent)`,
+            boxShadow: `0 -4px 12px ${t.accent}40`,
           }} />
       )}
       <div style={{ fontSize: 10, color: t.textSub, fontFamily: t.fontUI,
@@ -410,6 +432,7 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
   const { theme: t, mode } = useTheme();
   const isDeep = mode === "deepSea";
   const [chartPeriod, setChartPeriod] = useState("1D");
+  const [chartMode, setChartMode] = useState("Price"); // "Price" | "Volume" | "Volatility"
 
   // Pick the top mover for featured chart
   const [featuredSym, setFeaturedSym] = useState(null);
@@ -420,6 +443,34 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
   const sym = featuredSym || topSym;
   const featured = symMap[sym] || { price: 0, change: 0, history: [], h60: [], volume: 0 };
   const isUp = featured.change >= 0;
+  
+  // Generate mock historical data for longer periods since useDataStream only has live history
+  const chartData = useMemo(() => {
+    const live = featured.h60 || featured.history || [featured.price || 100];
+    if (chartPeriod === "1D") return live;
+    
+    // Seed random based on symbol name for semi-consistent mock paths
+    let seed = sym.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const rand = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    const points = chartPeriod === "5D" ? 120 : chartPeriod === "1M" ? 240 : 360;
+    const history = [];
+    let cur = featured.price || 100;
+    const vol = chartPeriod === "5D" ? 0.005 : chartPeriod === "1M" ? 0.012 : 0.025;
+    
+    for (let i = 0; i < points; i++) {
+      const d = (rand() - 0.48) * vol;
+      cur *= (1 + d);
+      history.push(cur);
+    }
+    // Append the current live price at the end
+    history.push(featured.price || cur);
+    return history;
+  }, [featured.h60, featured.history, featured.price, chartPeriod, sym]);
+
   const chartColor = isUp ? t.green : t.red;
 
   const platforms = [
@@ -427,6 +478,15 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
     { label: "Mobile", value: 25, color: t.amber },
     { label: "Tablet", value: 15, color: t.textSub },
   ];
+
+const recentAnomalies = useMemo(() =>
+  (anomalies || [])
+    .filter(a => a.stdDev > 2)
+    .sort((a, b) => b.stdDev - a.stdDev),
+  [anomalies]
+);
+
+ 
 
   // Focus mode: clean, minimal
   if (focusMode) return <FocusView symMap={symMap} signals={signals} health={health} connected={connected} onSymbolSelect={onSymbolSelect} />;
@@ -459,10 +519,20 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
         <div style={{
           background: t.glass, backdropFilter: t.glassBlur,
           borderRadius: t.cardRadius, border: `1px solid ${t.border}`,
-          padding: "16px 18px", boxShadow: t.shadow,
+          padding: "20px 24px", boxShadow: t.shadowCard,
+          position: "relative", overflow: "hidden"
         }}>
+          {/* Subtle glow behind the top left values */}
+          {isDeep && (
+            <div style={{
+               position: "absolute", top: -40, left: -40, width: 200, height: 200,
+               background: `radial-gradient(circle, ${chartColor}1A 0%, transparent 70%)`,
+               filter: "blur(40px)", pointerEvents: "none"
+            }} />
+          )}
+
           {/* Chart header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, position: "relative", zIndex: 1 }}>
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
                 <span style={{ fontFamily: t.fontUI, fontSize: 12, color: t.textSub }}>{sym}</span>
@@ -480,19 +550,45 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
                 </span>
               </div>
               {featured.price > 0 && (
-                <div style={{ fontFamily: t.fontMono, fontSize: 9, color: t.textDim, marginTop: 5,
-                  display: "flex", gap: 10 }}>
-                  <span>O {(featured.price * 0.9982).toFixed(featured.price > 100 ? 2 : 4)}</span>
-                  <span>H {(featured.price * 1.0038).toFixed(featured.price > 100 ? 2 : 4)}</span>
-                  <span>L {(featured.price * 0.9958).toFixed(featured.price > 100 ? 2 : 4)}</span>
-                  <span>C {featured.price.toFixed(featured.price > 100 ? 2 : 4)}</span>
-                  <span>VOL {((featured.volume || 0) / 1e6).toFixed(1)}M</span>
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10,
+                  marginTop: 14, padding: "10px 12px",
+                  background: isDeep ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderRadius: 8, border: `1px solid ${t.border}`
+                }}>
+                  {[
+                    { l: "OPEN", v: (featured.price * 0.9982).toFixed(featured.price > 100 ? 2 : 4) },
+                    { l: "HIGH", v: (featured.price * 1.0038).toFixed(featured.price > 100 ? 2 : 4) },
+                    { l: "LOW", v: (featured.price * 0.9958).toFixed(featured.price > 100 ? 2 : 4) },
+                    { l: "CLOSE", v: featured.price.toFixed(featured.price > 100 ? 2 : 4) },
+                    { l: "VOLUME", v: `${((featured.volume || 0) / 1e6).toFixed(1)}M` }
+                  ].map((d, i) => (
+                    <div key={d.l} style={{ textAlign: i === 0 ? "left" : i === 4 ? "right" : "center" }}>
+                      <div style={{ fontSize: 8, color: t.textDim, fontFamily: t.fontUI, letterSpacing: "0.05em", marginBottom: 2 }}>{d.l}</div>
+                      <div style={{ fontSize: 11, color: t.text, fontFamily: t.fontMono, fontWeight: 700 }}>{d.v}</div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-            {/* Period + symbol switchers */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+            {/* Mode + Period switchers */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", zIndex: 10 }}>
               <div style={{ display: "flex", gap: 3 }}>
+                <div style={{ display: "flex", gap: 3, marginRight: 12 }}>
+                  {["Price", "Volume", "Volatility"].map(m => (
+                    <button key={m} onClick={() => setChartMode(m)}
+                      style={{
+                        padding: "3px 9px", borderRadius: 6,
+                        border: `1px solid ${chartMode === m ? t.accent + "60" : t.border}`,
+                        background: chartMode === m ? `${t.accent}14` : "transparent",
+                        color: chartMode === m ? t.accent : t.textDim,
+                        fontFamily: t.fontMono, fontSize: 9, fontWeight: 700,
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
                 {["1D","5D","1M","3M"].map(p => (
                   <button key={p} onClick={() => setChartPeriod(p)}
                     style={{
@@ -527,9 +623,10 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
 
           {/* The luminous chart */}
           <PriceChart
-            data={featured.h60 || featured.history || [featured.price || 100]}
+            data={chartData}
             color={chartColor}
             height={190}
+            mode={chartMode}
           />
         </div>
 
@@ -560,18 +657,61 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
       {/* ── RIGHT COLUMN ── */}
       <div style={{ width: 256, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
 
-        {/* Sector strip */}
-        <div style={{
-          background: t.glass, backdropFilter: t.glassBlur,
-          borderRadius: t.cardRadius, border: `1px solid ${t.border}`,
-          padding: "13px 14px", boxShadow: t.shadow,
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: t.textSub, fontFamily: t.fontUI,
-            textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-            Sector Heatmap
+          {/* Sector strip */}
+          <div style={{
+            background: t.glass, backdropFilter: t.glassBlur,
+            borderRadius: t.cardRadius, border: `1px solid ${t.border}`,
+            padding: "16px 18px", boxShadow: t.shadow,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: t.textSub, fontFamily: t.fontUI,
+              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+              Sector Heatmap
+            </div>
+            <SectorStrip symMap={symMap} />
           </div>
-          <SectorStrip symMap={symMap} />
-        </div>
+
+          {/* New System Alerts Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              background: t.glass, backdropFilter: t.glassBlur,
+              borderRadius: t.cardRadius, border: `1px solid ${t.border}`,
+              padding: "16px", boxShadow: t.shadow,
+              display: "flex", flexDirection: "column", gap: 12
+            }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <ShieldAlert size={14} color={t.warn} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: t.text, fontFamily: t.fontUI, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                System Alerts
+              </span>
+              <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: t.danger, boxShadow: `0 0 8px ${t.danger}` }} />
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {recentAnomalies.slice(0, 2).map((a, i) => (
+                <div key={a.id} 
+                  onClick={() => onSymbolSelect(a.symbol)}
+                  style={{ 
+                    padding: "8px 10px", background: `${t.danger}08`, 
+                    border: `1px solid ${t.danger}20`, borderRadius: 6,
+                    display: "flex", flexDirection: "column", gap: 3,
+                    cursor: "pointer", transition: "all 0.2s"
+                  }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: t.text, fontFamily: t.fontData }}>{a.symbol}</span>
+                    <span style={{ fontSize: 8, color: t.danger, fontWeight: 700 }}>{a.stdDev.toFixed(1)}σ</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: t.textDim, fontFamily: t.fontUI, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    Volatility spike detected
+                  </div>
+                </div>
+              ))}
+              {recentAnomalies.length === 0 && (
+                <div style={{ fontSize: 10, color: t.textDim, textAlign: "center", py: 10 }}>No anomalies</div>
+              )}
+            </div>
+          </motion.div>
 
         {/* Market Watch */}
         <div style={{
@@ -581,10 +721,11 @@ export function DashboardPage({ symMap, signals, anomalies, health, connected, o
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
           <div style={{
-            padding: "11px 12px 10px",
+            padding: "14px 16px 12px",
             borderBottom: `1px solid ${t.border}`,
             display: "flex", justifyContent: "space-between", alignItems: "center",
             flexShrink: 0,
+            background: isDeep ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)"
           }}>
             <span style={{ fontFamily: t.fontUI, fontSize: 11, fontWeight: 700, color: t.text,
               letterSpacing: "0.03em" }}>Market Watch</span>
@@ -719,21 +860,21 @@ function HeatmapCard({ t }) {
       <div style={{ fontSize: 9, color: t.textDim, fontFamily: t.fontUI, marginBottom: 10 }}>Trading intensity</div>
       <div style={{ display: "grid", gridTemplateColumns: "22px repeat(7,1fr)", gap: 2.5 }}>
         <div />
-        {days.map(d => <div key={d} style={{ fontSize: 7.5, color: t.textDim, fontFamily: t.fontUI, textAlign: "center" }}>{d}</div>)}
+        {days.map((d, i) => <div key={`day-header-${d}-${i}`} style={{ fontSize: 7.5, color: t.textDim, fontFamily: t.fontUI, textAlign: "center" }}>{d}</div>)}
         {hours.map((h, hi) => (
-          <>
-            <div key={h} style={{ fontSize: 7.5, color: t.textDim, fontFamily: t.fontUI, display: "flex", alignItems: "center" }}>{h}</div>
+          <Fragment key={`hour-row-${h}-${hi}`}>
+            <div style={{ fontSize: 7.5, color: t.textDim, fontFamily: t.fontUI, display: "flex", alignItems: "center" }}>{h}</div>
             {days.map((d, di) => {
               const v = data[hi][di];
               const c = v > 0.66 ? t.accent : v > 0.33 ? t.green : t.textDim;
               return (
-                <div key={`${hi}${di}`}
+                <div key={`cell-${hi}-${di}`}
                   style={{ height: 13, borderRadius: 2.5,
-                    background: `${c}${Math.floor(v * 180 + 28).toString(16).padStart(2,"0")}`,
-                    border: `1px solid ${c}15` }} />
+                    background: `${c}${Math.floor(v * 180 + 40).toString(16).padStart(2,"0")}`,
+                    border: `1px solid ${c}25` }} />
               );
             })}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>

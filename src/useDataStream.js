@@ -5,7 +5,7 @@ export const SECTORS = { AAPL:"Tech",MSFT:"Tech",NVDA:"Tech",GOOGL:"Tech",META:"
 export const COMPANIES = { AAPL:"Apple Inc.",MSFT:"Microsoft",NVDA:"NVIDIA",GOOGL:"Alphabet",AMZN:"Amazon",TSLA:"Tesla",META:"Meta",JPM:"JPMorgan",V:"Visa",XOM:"ExxonMobil",BTC:"Bitcoin",ETH:"Ethereum",GOLD:"Gold",WTI:"Crude Oil",EURUSD:"EUR/USD",BRK:"Berkshire" };
 export const BASE = { AAPL:189.5,MSFT:415.2,NVDA:875.4,GOOGL:178.9,AMZN:198.7,TSLA:248.6,META:520.3,JPM:198.4,V:275.8,XOM:118.3,BTC:67400,ETH:3520,GOLD:2318,WTI:82.4,EURUSD:1.0842,BRK:374.5 };
 
-const FLUSH_MS = 100;
+const FLUSH_MS = 600;
 const MAX_BUF = 50;
 const VOL_WINDOW = 60000;
 
@@ -22,7 +22,7 @@ function simWS(onMsg) {
       const chg = (px[sym] - BASE[sym]) / BASE[sym];
       onMsg({ id: `${sym}-${Date.now()}-${Math.random().toString(36).slice(2)}`, ts: Date.now(), symbol: sym, price: px[sym], basePrice: BASE[sym], change: chg, volume: Math.floor(Math.random() * 2e6) + 5e4, sector: SECTORS[sym], stdDev: Math.abs(chg / 0.018), anomaly: Math.abs(chg / 0.018) > 2 });
     }
-  }, 110);
+  }, 1200);
   return { close: () => { on = false; clearInterval(iv); } };
 }
 

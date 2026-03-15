@@ -77,7 +77,7 @@ const GLOBAL_CSS = `
 
 const PAGE_LABELS = {
   dashboard: "Dashboard", performance: "Performance", reach: "Global Reach",
-  funnel: "Funnel", alerts: "Alerts", preferences: "Preferences",
+  funnel: "Scanner", alerts: "Alerts", preferences: "Preferences",
   docs: "Document Vault", help: "Help & Info", settings: "Settings",
 };
 const NEEDS_FOOTER = new Set(["docs","settings","help","preferences","performance"]);
@@ -345,7 +345,7 @@ function TerminalApp({ onBack }) {
       case "performance":  return <PerformancePage symMap={symMap} />;
       case "reach":        return <ReachPage symMap={symMap} onSymbolSelect={setSelectedSym} />;
       case "funnel":       return <ScannerPage symMap={symMap} signals={signals} onSymbolSelect={setSelectedSym} />;
-      case "alerts":       return <AlertsPage anomalies={anomalies} connected={connected} onSymbolSelect={setSelectedSym} />;
+      case "alerts":       return <AlertsPage anomalies={anomalies} connected={connected} health={health} symMap={symMap} onSymbolSelect={setSelectedSym} />;
       case "docs":         return <DocsPage />;
       case "settings":     return <SettingsPage />;
       case "help":         return <HelpPage />;

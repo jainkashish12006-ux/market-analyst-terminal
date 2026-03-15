@@ -39,13 +39,13 @@ function PrimaryButton({ children, onClick, style = {} }) {
   return (
     <motion.button
       onClick={onClick}
-      whileTap={{ scale: 0.98 }}
-      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.96 }}
+      whileHover={{ scale: 1.04, boxShadow: "0 8px 32px rgba(0, 240, 255, 0.4)" }}
       style={{
-        padding: "12px 24px",
-        borderRadius: 8,
-        background: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
-        color: "#FFFFFF",
+        padding: "12px 28px",
+        borderRadius: 10,
+        background: "linear-gradient(135deg, #00F0FF, #2563EB)",
+        color: "#04050E",
         border: "none",
         cursor: "pointer",
         display: "flex",
@@ -53,8 +53,9 @@ function PrimaryButton({ children, onClick, style = {} }) {
         gap: 8,
         fontFamily: "'Inter', sans-serif",
         fontSize: 14,
-        fontWeight: 600,
-        boxShadow: "0 4px 14px rgba(59, 130, 246, 0.4)",
+        fontWeight: 700,
+        boxShadow: "0 4px 14px rgba(0, 240, 255, 0.25)",
+        transition: "box-shadow 0.3s ease",
         ...style
       }}>
       {children}
@@ -189,27 +190,31 @@ function FeatureCard({ icon: Icon, title, desc, delay }) {
       onHoverStart={() => setHov(true)}
       onHoverEnd={() => setHov(false)}
       style={{
-        background: hov ? "#111111" : "#0A0A0A",
-        border: `1px solid ${hov ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 8,
+        background: hov ? "rgba(11, 15, 25, 0.9)" : "rgba(11, 15, 25, 0.65)",
+        backdropFilter: "blur(24px)",
+        border: `1px solid ${hov ? "rgba(0, 240, 255, 0.3)" : "rgba(255, 255, 255, 0.08)"}`,
+        boxShadow: hov ? "0 8px 32px rgba(0, 240, 255, 0.15)" : "0 4px 24px rgba(0, 0, 0, 0.4)",
+        borderRadius: 12,
         padding: "24px",
         cursor: "default",
-        transition: "all 0.2s ease",
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: hov ? "translateY(-4px)" : "translateY(0)",
       }}>
       <div style={{
-        width: 40, height: 40, borderRadius: 6,
-        background: "rgba(255,255,255,0.05)",
-        border: `1px solid rgba(255,255,255,0.1)`,
+        width: 44, height: 44, borderRadius: 10,
+        background: hov ? "rgba(0, 240, 255, 0.1)" : "rgba(255,255,255,0.03)",
+        border: `1px solid ${hov ? "rgba(0, 240, 255, 0.4)" : "rgba(255,255,255,0.08)"}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         marginBottom: 16,
+        transition: "all 0.3s ease",
       }}>
-        <Icon size={18} color="#EDEDED" />
+        <Icon size={20} color={hov ? "#00F0FF" : "#F8FAFC"} />
       </div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
-        color: "#EDEDED", marginBottom: 8 }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, fontWeight: 700,
+        color: "#F8FAFC", marginBottom: 8 }}>
         {title}
       </div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#A1A1AA",
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#94A3B8",
         lineHeight: 1.6 }}>
         {desc}
       </div>
@@ -258,10 +263,10 @@ const CSS = `
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 `;
 
-// ── LANDING PAGE ──────────────────────────────────────────────────────────────
 export const LandingPage = ({ onEnter }) => {
   const prices = useLivePrices();
   const [scrolled, setScrolled] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
   const heroRef = useRef(null);
 
   useEffect(() => {
@@ -275,7 +280,7 @@ export const LandingPage = ({ onEnter }) => {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "radial-gradient(ellipse at top, #0f172a 0%, #020617 100%)",
+      background: "radial-gradient(ellipse at top, #0B0F19 0%, #04050E 100%)",
       color: "#F8FAFC",
       fontFamily: "'Inter', sans-serif",
       overflowX: "hidden",
@@ -425,7 +430,7 @@ export const LandingPage = ({ onEnter }) => {
           <PrimaryButton onClick={onEnter}>
             Open Terminal <ArrowRight size={15} />
           </PrimaryButton>
-          <SecondaryButton>
+          <SecondaryButton onClick={() => setShowDemo(true)}>
             <Play size={13} />
             Watch demo
           </SecondaryButton>
@@ -452,10 +457,12 @@ export const LandingPage = ({ onEnter }) => {
 
       {/* ── STATS STRIP ── */}
       <section style={{
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        borderBottom: "1px solid rgba(255,255,255,0.1)",
-        background: "#050505",
+        borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+        background: "rgba(11, 15, 25, 0.4)",
+        backdropFilter: "blur(12px)",
         padding: "40px max(24px, calc((100vw - 1160px) / 2))",
+        position: "relative", zIndex: 1,
       }}>
         <div style={{
           display: "grid",
@@ -489,9 +496,17 @@ export const LandingPage = ({ onEnter }) => {
       {/* ── FEATURES ── */}
       <section style={{
         padding: "100px max(24px, calc((100vw - 1160px) / 2))",
-        background: "#000000",
+        background: "#04050E",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+        {/* Glow orb behind features */}
+        <div style={{
+          position: "absolute", top: "50%", right: "-10%", width: "40vw", height: "40vw",
+          background: "radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%)",
+          transform: "translateY(-50%)", pointerEvents: "none", filter: "blur(80px)", zIndex: 0
+        }} />
+        <div style={{ maxWidth: 1160, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -534,8 +549,8 @@ export const LandingPage = ({ onEnter }) => {
       {/* ── CTA SECTION ── */}
       <section style={{
         padding: "100px max(24px, calc((100vw - 1160px) / 2))",
-        background: "#000",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
+        background: "radial-gradient(ellipse at bottom, #0B0F19 0%, #04050E 100%)",
+        borderTop: "1px solid rgba(255, 255, 255, 0.05)",
       }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -566,11 +581,11 @@ export const LandingPage = ({ onEnter }) => {
 
       {/* ── FOOTER ── */}
       <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.1)",
+        borderTop: "1px solid rgba(255, 255, 255, 0.05)",
         padding: "32px max(24px, calc((100vw - 1160px) / 2))",
         display: "flex", justifyContent: "space-between", alignItems: "center",
         flexWrap: "wrap", gap: 16,
-        background: "#000",
+        background: "#04050E",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 20, height: 20, borderRadius: 4,
@@ -598,12 +613,79 @@ export const LandingPage = ({ onEnter }) => {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
-            color: "#71717A" }}>
-            All systems nominal
-          </span>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginTop: 40, textAlign: "center" }}>
+            © 2026 OmniTrade Analytics. All rights reserved.
+          </div>
         </div>
       </footer>
+
+      {/* ── Demo Modal ── */}
+      <AnimatePresence>
+        {showDemo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)",
+              zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
+              padding: 24,
+            }}
+            onClick={() => setShowDemo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: "100%", maxWidth: 900, aspectRatio: "16/9",
+                background: "#04050E", borderRadius: 16, border: "1px solid rgba(0, 240, 255, 0.2)",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
+                overflow: "hidden", position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexDirection: "column", gap: 16
+              }}
+            >
+              <button 
+                onClick={() => setShowDemo(false)}
+                style={{
+                  position: "absolute", top: 16, right: 16,
+                  background: "rgba(255,255,255,0.05)", border: "none",
+                  width: 32, height: 32, borderRadius: 16,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: "#fff"
+                }}
+              >
+                ✕
+              </button>
+              
+              <div style={{
+                width: 80, height: 80, borderRadius: 40,
+                background: "rgba(0, 240, 255, 0.1)", border: "1px solid rgba(0, 240, 255, 0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+              }}>
+                <Play size={32} color="#00F0FF" style={{ marginLeft: 6 }} />
+              </div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 600, color: "#fff" }}>
+                Platform Walkthrough
+              </div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#94A3B8" }}>
+                (Simulated Video Playback)
+              </div>
+              
+              <style>{`
+                @keyframes pulse {
+                  0%, 100% { opacity: 1; transform: scale(1); }
+                  50% { opacity: 0.6; transform: scale(1.05); }
+                }
+              `}</style>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
